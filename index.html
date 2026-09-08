@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#111417">
+<title>3D Parkour</title>
+<style>
+  :root { --safe-l: env(safe-area-inset-left, 0px); --safe-r: env(safe-area-inset-right, 0px);
+          --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#111417;
+               font-family: ui-rounded, "Segoe UI", system-ui, sans-serif; color:#eef2f5;
+               overscroll-behavior:none; touch-action:none; }
+  canvas { display:block; width:100%; height:100%; position:fixed; inset:0; }
+
+  #ui { position:fixed; inset:0; pointer-events:none; }
+  #fade { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; }
+
+  /* ---------------- HUD ---------------- */
+  .hud { position:absolute; inset:0; }
+  .hud-top { position:absolute; top:calc(10px + var(--safe-t)); left:0; right:0;
+             display:flex; align-items:center; justify-content:space-between;
+             padding:0 calc(16px + var(--safe-l)) 0 calc(16px + var(--safe-r));
+             text-shadow:0 2px 6px rgba(0,0,0,.75); font-size:15px; }
+  .hud-level { opacity:.85; font-weight:600; letter-spacing:.02em; }
+  .hud-timer { font-variant-numeric:tabular-nums; font-size:26px; font-weight:700;
+               letter-spacing:.01em; }
+  .hud-stats { display:flex; gap:14px; opacity:.85; font-variant-numeric:tabular-nums; }
+  .crosshair { position:absolute; left:50%; top:50%; width:4px; height:4px; margin:-2px 0 0 -2px;
+               background:#fff; border-radius:50%; opacity:.6;
+               box-shadow:0 0 0 1.5px rgba(0,0,0,.45); }
+  .hud-effects { position:absolute; left:calc(16px + var(--safe-l)); top:calc(52px + var(--safe-t));
+                 display:flex; flex-direction:column; gap:6px; }
+  .fx { background:rgba(0,0,0,.42); border-left:3px solid var(--c); padding:4px 10px;
+        border-radius:4px; font-size:13px; backdrop-filter:blur(6px); }
+  .hud-hint { position:absolute; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%);
+              background:rgba(0,0,0,.58); padding:10px 18px; border-radius:8px; font-size:14px;
+              max-width:min(560px, 86vw); text-align:center; opacity:0; transition:opacity .35s;
+              backdrop-filter:blur(8px); line-height:1.45; }
+  .hud-hint.show { opacity:1; }
+  .hud-toast { position:absolute; left:50%; top:24%; transform:translateX(-50%);
+               background:rgba(0,0,0,.6); padding:8px 18px; border-radius:20px; font-size:15px;
+               font-weight:600; opacity:0; transition:opacity .25s; backdrop-filter:blur(8px); }
+  .hud-toast.show { opacity:1; }
+  .hud-debug { position:absolute; right:calc(16px + var(--safe-r)); bottom:calc(16px + var(--safe-b));
+               font:12px ui-monospace,Menlo,monospace; white-space:pre; opacity:.7;
+               text-align:right; display:none; }
+
+  /* ---------------- panels ---------------- */
+  .panel { position:absolute; inset:0; display:none; place-items:center;
+           background:rgba(8,10,12,.78); backdrop-filter:blur(10px); pointer-events:auto; }
+  .panel.show { display:grid; }
+  .card { background:#191d22; border:1px solid #2b3138; border-radius:14px; padding:28px 32px;
+          min-width:min(380px, 88vw); text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.5); }
+  .card h2 { margin:0 0 6px; font-size:24px; }
+  .card p { margin:4px 0; opacity:.75; font-size:14px; }
+  .big { font-size:40px; font-weight:700; font-variant-numeric:tabular-nums; margin:10px 0 2px; }
+  button { pointer-events:auto; font:inherit; font-weight:600; font-size:15px; cursor:pointer;
+           background:#2f7ae5; color:#fff; border:0; border-radius:9px; padding:12px 22px;
+           margin:6px 5px 0; transition:filter .15s; }
+  button:hover { filter:brightness(1.12); }
+  button.ghost { background:#262c33; }
+  .settings { text-align:left; margin:16px 0 18px; display:flex; flex-direction:column; gap:11px; }
+  .settings label { display:flex; align-items:center; gap:10px; font-size:14px; cursor:pointer; }
+  .settings label.slider { display:grid; grid-template-columns:1fr auto; gap:4px; }
+  .settings label.slider span { font-size:14px; }
+  .settings input[type=range] { grid-column:1/-1; width:100%; accent-color:#2f7ae5; }
+  .settings i { font-style:normal; opacity:.5; font-size:12.5px; display:block; }
+  .settings input[type=checkbox] { width:17px; height:17px; accent-color:#2f7ae5; flex:none; }
+
+  /* ---------------- title ---------------- */
+  #title .card { min-width:min(460px,90vw); }
+  .title-h { font-size:34px; font-weight:800; letter-spacing:-.01em; margin:0 0 2px; }
+  .title-sub { opacity:.65; font-size:14px; margin-bottom:18px; }
+  .keyrow { display:flex; flex-wrap:wrap; gap:6px 10px; justify-content:center; margin:14px 0 4px;
+            font-size:12.5px; opacity:.62; }
+  kbd { background:#262c33; border:1px solid #363d45; border-bottom-width:2px; border-radius:5px;
+        padding:2px 6px; font:inherit; font-size:11.5px; }
+
+  /* ---------------- touch controls ---------------- */
+  .touch-ui { position:absolute; inset:0; display:none; pointer-events:auto; touch-action:none; }
+  .stick { position:absolute; width:0; height:0; opacity:0; transition:opacity .12s; }
+  .stick.active { opacity:1; }
+  .stick-base { position:absolute; left:-62px; top:-62px; width:124px; height:124px;
+                border-radius:50%; background:rgba(255,255,255,.09);
+                border:2px solid rgba(255,255,255,.22); }
+  .stick-knob { position:absolute; left:-26px; top:-26px; width:52px; height:52px; border-radius:50%;
+                background:rgba(255,255,255,.34); border:2px solid rgba(255,255,255,.5); }
+  .btn { position:absolute; display:grid; place-items:center; user-select:none;
+         background:rgba(255,255,255,.13); border:2px solid rgba(255,255,255,.28);
+         color:#fff; font-weight:700; border-radius:50%; backdrop-filter:blur(4px); }
+  .btn.pressed { background:rgba(255,255,255,.32); }
+  .btn-jump { right:calc(24px + var(--safe-r)); bottom:calc(28px + var(--safe-b));
+              width:96px; height:96px; font-size:16px; }
+  .btn-sprint { right:calc(132px + var(--safe-r)); bottom:calc(46px + var(--safe-b));
+                width:68px; height:68px; font-size:14px; }
+  .btn-sprint.on { background:rgba(90,190,255,.34); border-color:rgba(140,215,255,.75); }
+  .btn-small { width:48px; height:48px; font-size:20px; }
+  .btn-respawn { right:calc(28px + var(--safe-r)); top:calc(74px + var(--safe-t)); }
+  .btn-cam { right:calc(28px + var(--safe-r)); top:calc(132px + var(--safe-t)); }
+  .rotate-note { position:absolute; inset:0; display:none; place-items:center; text-align:center;
+                 background:#111417; font-size:17px; padding:30px; }
+  @media (orientation: portrait) and (pointer: coarse) { .rotate-note { display:grid; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <div id="hud"></div>
+
+  <div class="panel show" id="title">
+    <div class="card">
+      <div class="title-h">3D Parkour</div>
+      <div class="title-sub">Minecraft-style parkour · 5 biomes · endless mode</div>
+      <div id="level-list"></div>
+      <div id="endless-row">
+        <button data-act="endless" style="width:100%;text-align:left">
+          ♾️ Endless mode
+          <span style="float:right;opacity:.7;font-weight:400" id="endless-best"></span>
+        </button>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input id="seed-input" placeholder="seed (optional)"
+                 style="flex:1;background:#12161a;border:1px solid #2b3138;color:#eef2f5;
+                        border-radius:8px;padding:9px 11px;font:inherit;font-size:13px;
+                        pointer-events:auto">
+        </div>
+      </div>
+      <div class="keyrow">
+        <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</span>
+        <span><kbd>Space</kbd> jump</span>
+        <span><kbd>Ctrl</kbd> sprint</span>
+        <span><kbd>Shift</kbd> sneak</span>
+        <span><kbd>V</kbd> camera</span>
+        <span><kbd>R</kbd> respawn</span>
+        <span><kbd>Esc</kbd> pause</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="pause">
+    <div class="card">
+      <h2>Paused</h2>
+      <div class="settings">
+        <label><input type="checkbox" id="set-assist">
+          <span>Assist mode <i>forgiving jump timing</i></span></label>
+        <label><input type="checkbox" id="set-sound">
+          <span>Sound</span></label>
+        <label><input type="checkbox" id="set-hints">
+          <span>Show hints</span></label>
+        <label class="slider"><span>Look sensitivity</span>
+          <input type="range" id="set-sens" min="0.3" max="2.5" step="0.1"></label>
+        <label class="slider"><span>Field of view</span>
+          <input type="range" id="set-fov" min="60" max="100" step="1"></label>
+      </div>
+      <button data-act="resume">Resume</button>
+      <button class="ghost" data-act="restart">Restart level</button>
+      <button class="ghost" data-act="quit">Main menu</button>
+    </div>
+  </div>
+
+  <div class="panel" id="win">
+    <div class="card">
+      <h2>Level complete</h2>
+      <div class="big win-time">0:00.00</div>
+      <p class="win-best"></p>
+      <p class="win-deaths"></p>
+      <p class="win-par"></p>
+      <button data-act="next">Next level</button>
+      <button class="ghost" data-act="retry">Retry</button>
+      <button class="ghost" data-act="quit">Main menu</button>
+    </div>
+  </div>
+
+  <div class="rotate-note"><div>Turn your phone sideways to play 🙂</div></div>
+</div>
+<div id="fade"></div>
+
+<script type="module">
+import { Game } from './src/main.js';
+import { LEVELS } from './src/levels/index.js';
+import { save, fmtTime } from './src/save.js';
+import { audio } from './src/audio.js';
+
+const ui = document.getElementById('ui');
+const game = new Game(document.getElementById('c'), ui);
+window.game = game;                     // handy for poking at it in the console
+
+const titlePanel = document.getElementById('title');
+const list = document.getElementById('level-list');
+
+function renderLevelList() {
+  const eb = document.getElementById('endless-best');
+  if (eb) eb.textContent = save.data.endlessBest ? `best ${save.data.endlessBest} platforms` : '';
+  list.innerHTML = LEVELS.map((l, i) => {
+    const locked = (i + 1) > save.data.unlocked;
+    const best = save.data.best[l.name];
+    return `<button class="${locked ? 'ghost' : ''}" data-level="${i}" ${locked ? 'disabled' : ''}
+             style="display:block;width:100%;text-align:left;${locked ? 'opacity:.45' : ''}">
+              ${locked ? '🔒 ' : ''}${i + 1}. ${l.name}
+              <span style="float:right;opacity:.7;font-weight:400">
+                ${locked ? 'locked' : best ? fmtTime(best) : '—'}</span>
+            </button>`;
+  }).join('');
+}
+renderLevelList();
+
+function start(i) {
+  audio.ensure();                       // browsers need a click before sound works
+  titlePanel.classList.remove('show');
+  document.getElementById('win').classList.remove('show');
+  document.getElementById('pause').classList.remove('show');
+  game.currentIndex = i;
+  game.loadLevel(LEVELS[i]);
+}
+
+list.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-level]');
+  if (b && !b.disabled) start(+b.dataset.level);
+});
+
+ui.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'resume') game.togglePause();
+  else if (act === 'endless') {
+    titlePanel.classList.remove('show');
+    document.getElementById('win').classList.remove('show');
+    document.getElementById('pause').classList.remove('show');
+    audio.ensure();
+    game.currentIndex = -1;
+    game.startEndless(document.getElementById('seed-input').value.trim());
+  }
+  else if (act === 'restart' || act === 'retry') {
+    if (game.currentIndex < 0) game.startEndless(String(game.endless.seed));
+    else start(game.currentIndex);
+  }
+  else if (act === 'next') start(Math.min(LEVELS.length - 1, game.currentIndex + 1));
+  else if (act === 'quit') {
+    document.getElementById('win').classList.remove('show');
+    document.getElementById('pause').classList.remove('show');
+    game.state = 'menu';
+    renderLevelList();
+    titlePanel.classList.add('show');
+  }
+});
+
+// ---- settings ----
+const S = {
+  assist: document.getElementById('set-assist'),
+  sound:  document.getElementById('set-sound'),
+  hints:  document.getElementById('set-hints'),
+  sens:   document.getElementById('set-sens'),
+  fov:    document.getElementById('set-fov'),
+};
+function loadSettings() {
+  S.assist.checked = save.settings.assist;
+  S.sound.checked  = save.settings.sound;
+  S.hints.checked  = save.settings.showHints;
+  S.sens.value     = save.settings.sensitivity;
+  S.fov.value      = save.settings.fov;
+}
+loadSettings();
+S.assist.addEventListener('change', () => {
+  save.set('settings.assist', S.assist.checked);
+  if (game.player) game.player.assist = S.assist.checked;
+});
+S.sound.addEventListener('change', () => save.set('settings.sound', S.sound.checked));
+S.hints.addEventListener('change', () => save.set('settings.showHints', S.hints.checked));
+S.sens.addEventListener('input', () => {
+  const v = +S.sens.value;
+  save.set('settings.sensitivity', v);
+  game.keys.sensitivity = 0.0022 * v;
+  game.touch.sensitivity = 0.006 * v;
+});
+S.fov.addEventListener('input', () => {
+  const v = +S.fov.value;
+  save.set('settings.fov', v);
+  game.camera.baseFov = v;
+});
+
+// Clicking the canvas re-grabs the mouse after an accidental Esc.
+document.getElementById('c').addEventListener('click', () => {
+  if (game.state === 'playing' && !game.isTouch) game.keys.requestLock();
+});
+
+addEventListener('keydown', (e) => {
+  if (e.code === 'F3') { e.preventDefault(); game.showDebug = !game.showDebug; }
+});
+</script>
+</body>
+</html>

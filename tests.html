@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>3D Parkour - Physics Tests</title>
+<style>
+  body { background:#14161a; color:#dfe4ea; font:14px ui-monospace,Menlo,Consolas,monospace;
+         margin:0; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  p.sub { color:#8b95a3; margin:0 0 18px; }
+  .row { padding:7px 10px; border-radius:5px; margin-bottom:3px; display:flex; gap:10px;
+         align-items:baseline; }
+  .pass { background:#16301f; } .fail { background:#3a1a1c; }
+  .tag { font-weight:700; width:52px; flex:none; }
+  .pass .tag { color:#5ede8a; } .fail .tag { color:#ff7b7b; }
+  .detail { color:#8b95a3; margin-left:auto; }
+  #summary { margin-top:18px; padding:12px; border-radius:6px; font-weight:700; }
+  .ok { background:#16301f; color:#5ede8a; } .bad { background:#3a1a1c; color:#ff7b7b; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js" } }
+</script>
+</head>
+<body>
+<h1>Physics tests</h1>
+<p class="sub">These check Minecraft's real movement numbers. Every level is designed around them.</p>
+<div id="out">Running…</div>
+<div id="summary"></div>
+<script type="module">
+import { runTests } from './src/tests.js';
+const t0 = performance.now();
+const results = runTests();
+const ms = (performance.now() - t0).toFixed(0);
+const out = document.getElementById('out');
+out.innerHTML = results.map(r =>
+  `<div class="row ${r.pass ? 'pass' : 'fail'}"><span class="tag">${r.pass ? 'PASS' : 'FAIL'}</span>` +
+  `<span>${r.name}</span><span class="detail">${r.detail || ''}</span></div>`).join('');
+const failed = results.filter(r => !r.pass);
+const sum = document.getElementById('summary');
+sum.className = failed.length ? 'bad' : 'ok';
+sum.textContent = failed.length
+  ? `${failed.length} of ${results.length} tests FAILED (${ms} ms)`
+  : `All ${results.length} tests passed (${ms} ms)`;
+window.__RESULTS__ = results;
+window.__DONE__ = true;
+console.log(results.map(r => `${r.pass ? 'PASS' : 'FAIL'} ${r.name} ${r.detail}`).join('\n'));
+</script>
+</body>
+</html>

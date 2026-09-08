@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Dropbox
+.dropbox
+.dropbox.attr
+*conflicted copy*
+
+# Python (serve.py)
+__pycache__/
+*.py[cod]
+
+# Editors
+.vscode/
+.idea/
+*.swp
