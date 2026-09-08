@@ -62,10 +62,17 @@ export default {
     c.place('cobweb', 0, 0, 1); c.place('cobweb', 1, 0, 1);
     c.step(2); c.pad(3, 3, 'oak_planks');
 
-    // --- Down a ladder, then the big one ------------------------------------
+    // --- Up a ladder, then the big one --------------------------------------
+    // The ladder shaft has to stay clear. So the top platform starts one block
+    // PAST the ladder, and its legs go under the platform rather than straight
+    // down the shaft - doing that is what used to bury the ladder in stone and
+    // leave a flat 4-block wall you could not climb.
     c.gap(2); c.pad(3, 3, 'stone'); c.leg(10, 'stone');
-    for (let h = 1; h <= 4; h++) c.place('ladder', 1, 0, h);
-    c.step(1).up(4).pad(3, 3, 'stone');
+    for (let h = 1; h <= 5; h++) c.place('ladder', 1, 0, h);
+    c.step(2).up(4).pad(3, 3, 'stone'); c.leg(4, 'stone');
+    // The wall the ladder is bolted to. You climb by holding forward INTO this
+    // pillar, so it has to be the column ahead of the ladder, never the ladder's
+    // own column.
     for (let i = 1; i <= 4; i++) w.set(c.x, c.y - i, c.z, 'stone');
 
     // --- The signature 4-block sprint jump ----------------------------------
