@@ -73,7 +73,12 @@ function decorate(w) {
   let s = 4242;
   const rand = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
   for (let i = 0; i < 34; i++) {
-    const x = Math.round((rand() - 0.5) * 86);
+    // Hold the trees off the course. It runs straight down x = 0 and is 7 wide,
+    // and a jungle canopy reaches 3 blocks sideways, so anything closer than
+    // x = 8 can drop solid leaves into the air the player has to stand in.
+    // A tree that seals the spawn makes the level unfinishable.
+    const spread = rand() - 0.5;
+    const x = Math.round(spread * 86) + (spread < 0 ? -8 : 8);
     const z = Math.round(-rand() * 135 + 10);
     const y = -6 + Math.round(rand() * 2);
     for (let dx = -3; dx <= 3; dx++)
