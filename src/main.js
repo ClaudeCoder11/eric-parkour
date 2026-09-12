@@ -25,6 +25,10 @@ export class Game {
   constructor(canvas, uiRoot) {
     this.canvas = canvas;
     this.uiRoot = uiRoot;
+    // The respawn fade sheet is a sibling of #ui, not a child of it, so it has
+    // to be found from the document. Looked up once: this is touched every
+    // frame of a fade.
+    this.fadeEl = document.getElementById('fade');
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // phones: cap at 2
@@ -371,7 +375,7 @@ export class Game {
 
       if (this.fadeAlpha > 0) {
         this.fadeAlpha = Math.max(0, this.fadeAlpha - dt * (1000 / C.RESPAWN_FADE_MS));
-        this.uiRoot.querySelector('#fade').style.opacity = this.fadeAlpha;
+        if (this.fadeEl) this.fadeEl.style.opacity = this.fadeAlpha;
       }
     }
 
