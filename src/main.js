@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import * as C from './constants.js';
 import { Player } from './player.js';
 import { PlayerCamera } from './camera.js';
+import { Avatar } from './avatar.js';
 import { buildWorldMesh } from './world/mesher.js';
 import { loadLevel, BIOMES } from './world/level.js';
 import { LEVELS } from './levels/index.js';
@@ -32,6 +33,10 @@ export class Game {
     this.scene = new THREE.Scene();
     this.camera = new PlayerCamera(save.settings.fov);
     this.camera.mode = save.settings.camera || 'first';
+
+    // The character you see in third person. scene.clear() drops it on every
+    // level load, so it is re-added alongside the level mesh.
+    this.avatar = new Avatar();
 
     this.hud = new HUD(uiRoot.querySelector('#hud'));
     this.state = 'menu';           // menu | playing | paused | dead | won
@@ -91,6 +96,7 @@ export class Game {
 
     this.levelMesh = buildWorldMesh(this.level.world, { tint: this.level.tint });
     this.scene.add(this.levelMesh);
+    this.scene.add(this.avatar.group);
 
     // Piston platforms are separate meshes so they can move without a rebuild.
     this.platforms = (this.level.platforms || []).map((d) => new MovingPlatform(d));
@@ -126,6 +132,8 @@ export class Game {
     this.platforms = [];
     if (this.endless) this.endless.dispose();
     this.scene.clear();
+
+    this.scene.add(this.avatar.group);
 
     const seed = parseSeed(seedText);
     this.endless = new EndlessCourse(this.scene, { seed, unlocked: save.data.unlocked });
@@ -346,6 +354,9 @@ export class Game {
       const pos = this.player.lerpPos(alpha);
       this.camera.update(pos, this.player.eyeHeight, this.player.yaw, this.player.pitch,
                          this.level.world, dt, this.player.speedBps);
+
+      this.avatar.update({ pos, yaw: this.player.yaw, pitch: this.player.pitch,
+                           player: this.player, dt, visible: this.camera.mode === 'third' });
 
       this.hud.update({
         time: this.ticks / C.TPS,
