@@ -49,7 +49,7 @@
                text-align:right; display:none; }
 
   /* ---------------- panels ---------------- */
-  .panel { position:absolute; inset:0; display:none; place-items:center;
+  .panel { position:absolute; inset:0; display:none; place-items:center; z-index:10;
            background:rgba(8,10,12,.78); backdrop-filter:blur(10px); pointer-events:auto; }
   .panel.show { display:grid; }
   .card { background:#191d22; border:1px solid #2b3138; border-radius:14px; padding:28px 32px;
@@ -78,9 +78,16 @@
             font-size:12.5px; opacity:.62; }
   kbd { background:#262c33; border:1px solid #363d45; border-bottom-width:2px; border-radius:5px;
         padding:2px 6px; font:inherit; font-size:11.5px; }
+  .ctrl-row { display:flex; align-items:center; justify-content:space-between; gap:10px;
+              margin-top:14px; padding-top:13px; border-top:1px solid #2b3138; font-size:13px; }
+  .ctrl-row label { opacity:.7; }
+  .ctrl-row select { pointer-events:auto; font:inherit; font-size:13px; cursor:pointer;
+                     background:#12161a; color:#eef2f5; border:1px solid #2b3138;
+                     border-radius:8px; padding:7px 10px; }
 
   /* ---------------- touch controls ---------------- */
-  .touch-ui { position:absolute; inset:0; display:none; pointer-events:auto; touch-action:none; }
+  .touch-ui { position:absolute; inset:0; display:none; pointer-events:auto; touch-action:none;
+              z-index:5; }
   .stick { position:absolute; width:0; height:0; opacity:0; transition:opacity .12s; }
   .stick.active { opacity:1; }
   .stick-base { position:absolute; left:-62px; top:-62px; width:124px; height:124px;
@@ -101,7 +108,7 @@
   .btn-respawn { right:calc(28px + var(--safe-r)); top:calc(74px + var(--safe-t)); }
   .btn-cam { right:calc(28px + var(--safe-r)); top:calc(132px + var(--safe-t)); }
   .rotate-note { position:absolute; inset:0; display:none; place-items:center; text-align:center;
-                 background:#111417; font-size:17px; padding:30px; }
+                 background:#111417; font-size:17px; padding:30px; z-index:20; }
   @media (orientation: portrait) and (pointer: coarse) { .rotate-note { display:grid; } }
 </style>
 <script type="importmap">
@@ -138,6 +145,14 @@
         <span><kbd>V</kbd> camera</span>
         <span><kbd>R</kbd> respawn</span>
         <span><kbd>Esc</kbd> pause</span>
+      </div>
+      <div class="ctrl-row">
+        <label for="set-controls">Controls</label>
+        <select id="set-controls">
+          <option value="auto">Auto-detect</option>
+          <option value="keyboard">Keyboard &amp; mouse</option>
+          <option value="touch">Touch buttons</option>
+        </select>
       </div>
     </div>
   </div>
@@ -257,6 +272,7 @@ const S = {
   hints:  document.getElementById('set-hints'),
   sens:   document.getElementById('set-sens'),
   fov:    document.getElementById('set-fov'),
+  controls: document.getElementById('set-controls'),
 };
 function loadSettings() {
   S.assist.checked = save.settings.assist;
@@ -264,6 +280,7 @@ function loadSettings() {
   S.hints.checked  = save.settings.showHints;
   S.sens.value     = save.settings.sensitivity;
   S.fov.value      = save.settings.fov;
+  S.controls.value = save.settings.controls;
 }
 loadSettings();
 S.assist.addEventListener('change', () => {
@@ -271,6 +288,10 @@ S.assist.addEventListener('change', () => {
   if (game.player) game.player.assist = S.assist.checked;
 });
 S.sound.addEventListener('change', () => save.set('settings.sound', S.sound.checked));
+S.controls.addEventListener('change', () => {
+  save.set('settings.controls', S.controls.value);
+  game.setControls(S.controls.value);
+});
 S.hints.addEventListener('change', () => save.set('settings.showHints', S.hints.checked));
 S.sens.addEventListener('input', () => {
   const v = +S.sens.value;

@@ -66,8 +66,7 @@ export class Game {
       sensitivity: 0.0022 * save.settings.sensitivity,
     });
 
-    this.isTouch = isTouchDevice();
-    if (this.isTouch) this.touch.setEnabled(true);
+    this.setControls(save.settings.controls);
 
     addEventListener('resize', () => this.resize());
     this.resize();
@@ -207,6 +206,20 @@ export class Game {
       this.uiRoot.querySelector('#pause').classList.remove('show');
       if (!this.isTouch) this.keys.requestLock();
     }
+  }
+
+  // ------------------------------------------------------------------------
+  // 'auto' trusts the browser, which reports a touchscreen laptop as touch and
+  // then hides the mouse look behind the on-screen buttons. The explicit modes
+  // let you overrule that.
+  setControls(mode) {
+    this.controls = mode === 'keyboard' || mode === 'touch' ? mode : 'auto';
+    this.isTouch = this.controls === 'touch' ? true
+                 : this.controls === 'keyboard' ? false
+                 : isTouchDevice();
+    this.touch.setEnabled(this.isTouch);
+    if (this.isTouch) this.keys.exitLock();
+    else if (this.state === 'playing') this.keys.requestLock();
   }
 
   // ------------------------------------------------------------------------

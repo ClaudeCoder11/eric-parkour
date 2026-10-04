@@ -12,6 +12,7 @@ const DEFAULT = {
     sensitivity: 1.0,
     camera: 'first',
     sound: true,
+    controls: 'auto',          // auto | keyboard | touch
     fov: 78,
     showHints: true,
   },
