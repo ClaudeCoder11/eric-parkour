@@ -111,11 +111,30 @@
                  background:#111417; font-size:17px; padding:30px; z-index:20; }
   @media (orientation: portrait) and (pointer: coarse) { .rotate-note { display:grid; } }
 </style>
-<script type="importmap">
-{ "imports": { "three": "./lib/three.module.js" } }
-</script>
 </head>
 <body>
+<script>
+// If the module graph fails to load (old browser, missing file), the page
+// still renders its static markup and nothing is clickable. Say so instead
+// of leaving a menu that looks fine but does nothing.
+window.addEventListener('error', function (e) {
+  if (e.target && e.target.tagName === 'SCRIPT') window.__parkourLoadError = 'could not load ' + (e.target.src || 'a script');
+}, true);
+setTimeout(function () {
+  if (window.__parkourBooted) return;
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:999;display:grid;place-items:center;'
+    + 'background:#111417;color:#eef2f5;padding:30px;text-align:center;'
+    + 'font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;line-height:1.5';
+  d.innerHTML = '<div><div style="font-size:21px;font-weight:700;margin-bottom:10px">'
+    + 'The game could not start</div>'
+    + '<div style="opacity:.75;font-size:14px;max-width:420px">This browser is probably too old. '
+    + 'Try the latest Chrome, Edge, Firefox or Safari.</div>'
+    + '<div style="opacity:.45;font-size:12px;margin-top:14px;font-family:ui-monospace,Menlo,monospace">'
+    + (window.__parkourLoadError || 'scripts did not finish loading') + '</div></div>';
+  document.body.appendChild(d);
+}, 6000);
+</script>
 <canvas id="c"></canvas>
 <div id="ui">
   <div id="hud"></div>
@@ -313,6 +332,8 @@ document.getElementById('c').addEventListener('click', () => {
 addEventListener('keydown', (e) => {
   if (e.code === 'F3') { e.preventDefault(); game.showDebug = !game.showDebug; }
 });
+
+window.__parkourBooted = true;   // tells the watchdog above we got this far
 </script>
 </body>
 </html>

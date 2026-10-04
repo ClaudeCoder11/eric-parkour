@@ -9,7 +9,7 @@
 // Difficulty ramps by widening gaps and narrowing platforms, and only uses
 // mechanics from levels you have actually unlocked.
 // ---------------------------------------------------------------------------
-import * as THREE from 'three';
+import * as THREE from '../../lib/three.module.js';
 import { World } from '../world/world.js';
 import { buildWorldMesh } from '../world/mesher.js';
 import { BIOMES } from '../world/level.js';

@@ -1,6 +1,6 @@
 // First-person <-> third-person camera. Third person pulls back along the view
 // ray and stops short of any solid block so the camera never ends up inside a wall.
-import * as THREE from 'three';
+import * as THREE from '../lib/three.module.js';
 import { AABB } from './physics.js';
 
 export class PlayerCamera {

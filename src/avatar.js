@@ -10,7 +10,7 @@
 // materials and fakes its shape with per-face shading - so the model does the
 // same thing, using the mesher's shade values so it sits in the same light.
 // ---------------------------------------------------------------------------
-import * as THREE from 'three';
+import * as THREE from '../lib/three.module.js';
 import * as C from './constants.js';
 
 // Same numbers as world/mesher.js, in BoxGeometry's face order: +X -X +Y -Y +Z -Z

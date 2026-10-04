@@ -5,7 +5,7 @@
 // refresh rate; rendering interpolates between the last two ticks. That is what
 // makes a 4-block jump behave identically on a 60 Hz laptop and a 120 Hz phone.
 // ---------------------------------------------------------------------------
-import * as THREE from 'three';
+import * as THREE from '../lib/three.module.js';
 import * as C from './constants.js';
 import { Player } from './player.js';
 import { PlayerCamera } from './camera.js';

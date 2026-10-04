@@ -6,7 +6,7 @@
 // standing on one when it moves, you move with it. That is what makes a piston
 // jump work instead of the platform sliding out from under your feet.
 // ---------------------------------------------------------------------------
-import * as THREE from 'three';
+import * as THREE from '../../lib/three.module.js';
 import { World } from '../world/world.js';
 import { buildWorldMesh } from '../world/mesher.js';
 

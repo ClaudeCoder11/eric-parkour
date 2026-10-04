@@ -9,7 +9,7 @@
 // Face shading is baked into vertex colours the way Minecraft does it:
 // top brightest, north/south mid, east/west darker, bottom darkest.
 // ---------------------------------------------------------------------------
-import * as THREE from 'three';
+import * as THREE from '../../lib/three.module.js';
 import { getBlock, renderBoxes, texturesFor } from './blocks.js';
 import { buildAtlas } from './textures.js';
 

@@ -3,7 +3,7 @@
 // No Minecraft image files are used or needed. Each tile is 16x16, packed into
 // one atlas so the whole world can be drawn with a single material.
 // ---------------------------------------------------------------------------
-import * as THREE from 'three';
+import * as THREE from '../../lib/three.module.js';
 
 const TILE = 16;
 const COLS = 8;                 // atlas is COLS x COLS tiles
