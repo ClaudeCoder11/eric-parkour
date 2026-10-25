@@ -23,7 +23,7 @@ On your phone (same wifi): find your Mac's IP with `ipconfig getifaddr en0`, the
 
 The game is live at:
 
-**https://YOUR-USERNAME.github.io/3d-parkour/**
+**https://claudecoder11.github.io/eric-parkour/**
 
 Send that link to anyone. It opens on any computer or phone, and your Mac does not
 need to be turned on.
