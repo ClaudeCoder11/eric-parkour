@@ -2,7 +2,7 @@
 
 A Minecraft-style 3D parkour game that runs in the browser on both computer and phone.
 
-## Play
+## Play on this computer (while you work on it)
 
 From this folder:
 
@@ -18,6 +18,31 @@ of the code after you edit a file.)
 
 On your phone (same wifi): find your Mac's IP with `ipconfig getifaddr en0`, then open
 `http://THAT-IP:8100` in the phone browser and turn it sideways.
+
+## Play online, from any computer
+
+The game is live at:
+
+**https://YOUR-USERNAME.github.io/3d-parkour/**
+
+Send that link to anyone. It opens on any computer or phone, and your Mac does not
+need to be turned on.
+
+**Why `localhost` does not work for other people.** `localhost` means "the computer I
+am sitting at right now." When a friend types `localhost:8100` on their machine, their
+browser goes looking for the game on *their* computer, where nothing is running — so
+they get "This site can't be reached. localhost refused to connect." Nothing is broken;
+that address just never leaves the machine it is typed on. A real web address like the
+one above works from anywhere.
+
+After you change the game, put your changes on the live site with:
+
+```
+./publish.sh "what you changed"
+```
+
+Wait about a minute, then refresh. If you still see the old version, do a hard refresh
+(Cmd-Shift-R on Mac, Ctrl-F5 on Windows).
 
 ## Controls
 
@@ -49,6 +74,9 @@ that a fence is too tall to jump — the same numbers real Minecraft uses.
 index.html        the game page
 tests.html        physics test harness
 serve.py          dev server (no-cache, so edits show up immediately)
+publish.sh        push your changes to the live website
+backup.sh         save a timestamped zip to ~/Backups
+.nojekyll         tells GitHub Pages to serve the files exactly as they are
 lib/three.module.js   3D engine (vendored, pinned to r160, works offline)
 src/              all game code, plain ES modules, no build step
 src/levels/*.json the five levels — data, not code
