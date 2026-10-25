@@ -10,7 +10,7 @@ export default {
   parTime: 75,
   spawn: [0.5, 6, 0.5],
   spawnYaw: 0,
-  hint: 'Hold Ctrl (or double-tap W) to sprint. A sprint jump clears 4 blocks.',
+  hint: 'Double-tap W or hold Right Shift to sprint. A sprint jump clears 4 blocks.',
   unlocks: ['Sprinting, slabs, stairs, ladders and cobwebs'],
 
   build(c, w, level) {
