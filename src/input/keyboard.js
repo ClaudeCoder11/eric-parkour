@@ -24,6 +24,7 @@ export class KeyboardMouse {
       if (c === 'KeyR') this.onAction('respawn');
       if (c === 'Escape') this.onAction('pause');
       if (c === 'KeyP') this.onAction('pause');
+      if (c === 'KeyF') this.onAction('fullscreen');
       if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(c)) e.preventDefault();
     };
     this._up = (e) => {

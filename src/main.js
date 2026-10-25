@@ -15,6 +15,7 @@ import { loadLevel, BIOMES } from './world/level.js';
 import { LEVELS } from './levels/index.js';
 import { KeyboardMouse } from './input/keyboard.js';
 import { TouchControls, isTouchDevice } from './input/touch.js';
+import { toggleFullscreen, installLeaveGuard } from './input/screen.js';
 import { HUD } from './ui/hud.js';
 import { MovingPlatform, updatePlatforms } from './mechanics/platforms.js';
 import { save, fmtTime } from './save.js';
@@ -67,6 +68,10 @@ export class Game {
     });
 
     this.setControls(save.settings.controls);
+
+    // Ctrl+W is a sprint-and-run away from closing the tab on Windows, so
+    // make the browser ask first - but only when there's a run to lose.
+    installLeaveGuard(() => this.state === 'playing' || this.state === 'paused');
 
     addEventListener('resize', () => this.resize());
     this.resize();
@@ -189,11 +194,24 @@ export class Game {
       this.hud.showToast(m === 'first' ? 'First person' : 'Third person', 1100);
     } else if (a === 'respawn') {
       if (this.state === 'playing') { this.player.kill('manual'); }
+    } else if (a === 'fullscreen') {
+      this.toggleFullscreen();
     } else if (a === 'pause') {
       this.togglePause();
     } else if (a === 'unlocked') {
       if (this.state === 'playing' && !this.isTouch) this.togglePause(true);
     }
+  }
+
+  // Fullscreen also turns on Keyboard Lock where the browser has it, which
+  // is the only way Ctrl+W can be stopped from closing the tab.
+  async toggleFullscreen() {
+    const r = await toggleFullscreen();
+    if (!r.ok) this.hud.showToast('This browser will not allow fullscreen here', 1800);
+    else if (!r.on) this.hud.showToast('Left fullscreen', 1200);
+    else this.hud.showToast(r.locked ? 'Fullscreen - Ctrl+W is safe now'
+                                     : 'Fullscreen - Ctrl+W still closes the tab here', 1800);
+    if (r.on && this.state === 'playing' && !this.isTouch) this.keys.requestLock();
   }
 
   togglePause(force) {

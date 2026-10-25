@@ -159,12 +159,22 @@ setTimeout(function () {
       <div class="keyrow">
         <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move</span>
         <span><kbd>Space</kbd> jump</span>
-        <span><kbd>Ctrl</kbd> sprint</span>
-        <span><kbd>Shift</kbd> sneak</span>
+        <span><kbd>Ctrl</kbd> / <kbd>Right Shift</kbd> / double-tap <kbd>W</kbd> sprint</span>
+        <span><kbd>Left Shift</kbd> sneak</span>
         <span><kbd>V</kbd> camera</span>
         <span><kbd>R</kbd> respawn</span>
+        <span><kbd>F</kbd> fullscreen</span>
         <span><kbd>Esc</kbd> pause</span>
       </div>
+      <button class="ghost" data-act="fullscreen" style="width:100%">
+        ⛶ Play fullscreen
+      </button>
+      <p id="winkey-note" style="display:none;margin:8px 0 0;font-size:12px;opacity:.6;line-height:1.45">
+        On Windows and Linux, <kbd>Ctrl</kbd>+<kbd>W</kbd> closes the browser tab — and that is
+        exactly sprint-plus-forward. Play fullscreen to switch that off, or sprint with
+        <kbd>Right Shift</kbd> instead.
+      </p>
+
       <div class="ctrl-row">
         <label for="set-controls">Controls</label>
         <select id="set-controls">
@@ -261,7 +271,8 @@ ui.addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]');
   if (!b) return;
   const act = b.dataset.act;
-  if (act === 'resume') game.togglePause();
+  if (act === 'fullscreen') game.toggleFullscreen();
+  else if (act === 'resume') game.togglePause();
   else if (act === 'endless') {
     titlePanel.classList.remove('show');
     document.getElementById('win').classList.remove('show');
@@ -332,6 +343,11 @@ document.getElementById('c').addEventListener('click', () => {
 addEventListener('keydown', (e) => {
   if (e.code === 'F3') { e.preventDefault(); game.showDebug = !game.showDebug; }
 });
+
+// Mac closes tabs with Cmd+W, so the Ctrl+W warning would only confuse people there.
+if (!/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+  document.getElementById('winkey-note').style.display = 'block';
+}
 
 window.__parkourBooted = true;   // tells the watchdog above we got this far
 </script>
