@@ -32,5 +32,5 @@ REPO="${URL##*/}"
 
 echo "Published!"
 echo
-echo "Your game is at:  https://${USER}.github.io/${REPO}/"
+echo "Your game is at:  https://$(echo "$USER" | tr "A-Z" "a-z").github.io/${REPO}/"
 echo "Give it about a minute, then refresh."
