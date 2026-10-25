@@ -133,5 +133,25 @@ export class TouchControls {
   }
 }
 
-export const isTouchDevice = () =>
-  window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+// Auto-detect: does this machine have a real pointing device?
+//
+// The old check was `(pointer: coarse) || maxTouchPoints > 0`, which calls any
+// touchscreen laptop a phone - Chrome on Windows reports maxTouchPoints as 10
+// even when the person is using the trackpad and never touches the screen.
+//
+// So ask the opposite question instead: is there a mouse or trackpad? That
+// needs BOTH a precise pointer and the ability to hover. A mouse and a trackpad
+// have both; a finger has neither; a stylus is precise but cannot hover, so
+// requiring both keeps pen tablets on touch controls where they belong.
+// `any-pointer` / `any-hover` look at every input device, not just the main one,
+// which is what makes a laptop with a touchscreen come out as keyboard.
+//
+// The Controls dropdown overrules whatever this decides.
+export const isTouchDevice = () => {
+  const hasMouseOrTrackpad =
+    window.matchMedia('(any-pointer: fine)').matches &&
+    window.matchMedia('(any-hover: hover)').matches;
+  if (hasMouseOrTrackpad) return false;
+  return window.matchMedia('(any-pointer: coarse)').matches
+      || navigator.maxTouchPoints > 0;
+};
