@@ -370,6 +370,10 @@ export class Game {
     const dt = Math.min(0.25, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
 
+    // A key held when the window lost focus never gets its keyup, which is how
+    // the avatar ends up walking on its own. Drop held keys while we're away.
+    this.keys.pollFocus();
+
     if (this.player) {
       this.applyLook();
 
