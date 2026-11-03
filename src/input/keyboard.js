@@ -29,6 +29,8 @@ export class KeyboardMouse {
     this.keys = new Set();
     this.sensitivity = opts.sensitivity ?? 0.0022;
     this.locked = false;
+    this.wantLock = false;       // we asked for the mouse and still want it
+    this.lockPending = false;    // ...but the browser said no; retry on a gesture
     this.dYaw = 0; this.dPitch = 0;
     this.taps = [];                       // for double-tap-W to sprint
     this.sprintToggle = false;
@@ -66,8 +68,23 @@ export class KeyboardMouse {
       this.dPitch -= e.movementY * this.sensitivity;
     };
     this._lockChange = () => {
+      const had = this.locked;
       this.locked = document.pointerLockElement === this.canvas;
-      if (!this.locked) { this.clearKeys(); this.onAction('unlocked'); }
+      if (this.locked) { this.lockPending = false; this.onAction('locked'); return; }
+      this.clearKeys();
+      // Only a lock we actually held and then lost means "the player stepped
+      // away" and should pause. A refused request fires this event too, and
+      // pausing on that puts the game in a loop: resume asks again, is refused
+      // again, and pauses again.
+      if (had) this.onAction('unlocked');
+    };
+    // A refused request fires this and resolves nothing, so without it the
+    // game would sit in a level with a free mouse and never know.
+    this._lockError = () => this._lockRefused();
+    // Browsers only grant pointer lock off a user gesture, so a refusal waits
+    // for the next one rather than retrying into the same wall every frame.
+    this._gesture = () => {
+      if (this.lockPending && this.wantLock && !this.locked) this._attemptLock();
     };
     this._blur = () => this.clearKeys();
     this._visibility = () => { if (document.hidden) this.clearKeys(); };
@@ -78,6 +95,9 @@ export class KeyboardMouse {
     document.addEventListener('visibilitychange', this._visibility);
     document.addEventListener('mousemove', this._move);
     document.addEventListener('pointerlockchange', this._lockChange);
+    document.addEventListener('pointerlockerror', this._lockError);
+    window.addEventListener('pointerdown', this._gesture);
+    window.addEventListener('keydown', this._gesture);
   }
 
   // Drop every key we think is held. Safe to call at any time: a key that is
@@ -103,13 +123,41 @@ export class KeyboardMouse {
     if (this.keys.size && document.hasFocus && !document.hasFocus()) this.clearKeys();
   }
 
+  // Ask for the mouse. Browsers refuse this more often than you'd think: for a
+  // moment after the player drops the lock with Esc, when the call isn't close
+  // enough to a user gesture, or when the page isn't focused. The refusal is
+  // silent - no exception, and a promise that may never settle - so the old
+  // one-shot request could leave you in a level with a free cursor for good.
+  // Remember that we want it, and take the next gesture we're offered.
   requestLock() {
     if (!this.canvas.requestPointerLock) return;
-    // Returns a promise in newer browsers and rejects without a user gesture.
-    try { Promise.resolve(this.canvas.requestPointerLock()).catch(() => {}); }
-    catch { /* older browsers return undefined and throw instead */ }
+    this.wantLock = true;
+    if (this.locked) return;
+    this._attemptLock();
   }
-  exitLock() { try { document.exitPointerLock?.(); } catch { /* ignore */ } }
+
+  _attemptLock() {
+    try {
+      const r = this.canvas.requestPointerLock();
+      // Newer browsers return a promise; older ones return undefined and throw.
+      Promise.resolve(r).catch(() => this._lockRefused());
+    } catch { this._lockRefused(); }
+  }
+
+  _lockRefused() {
+    if (!this.wantLock || this.locked) return;
+    const first = !this.lockPending;
+    this.lockPending = true;
+    if (first) this.onAction('lock-refused');
+  }
+
+  // Giving up the mouse on purpose - pausing, winning, switching to touch.
+  // Clears the want, so the gesture retry doesn't snatch it straight back.
+  exitLock() {
+    this.wantLock = false;
+    this.lockPending = false;
+    try { document.exitPointerLock?.(); } catch { /* ignore */ }
+  }
 
   read() {
     const k = this.keys;
@@ -139,5 +187,8 @@ export class KeyboardMouse {
     document.removeEventListener('visibilitychange', this._visibility);
     document.removeEventListener('mousemove', this._move);
     document.removeEventListener('pointerlockchange', this._lockChange);
+    document.removeEventListener('pointerlockerror', this._lockError);
+    window.removeEventListener('pointerdown', this._gesture);
+    window.removeEventListener('keydown', this._gesture);
   }
 }

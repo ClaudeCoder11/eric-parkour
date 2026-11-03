@@ -197,9 +197,24 @@ export class Game {
     } else if (a === 'fullscreen') {
       this.toggleFullscreen();
     } else if (a === 'pause') {
+      // Esc both drops the pointer lock and reaches this handler, and losing
+      // the lock already paused us a moment ago. Without this guard the two
+      // cancel out: paused, then instantly un-paused into a re-lock the
+      // browser refuses because Esc just happened - a level with a free mouse.
+      if (performance.now() - (this._autoPausedAt || 0) < 250) return;
       this.togglePause();
     } else if (a === 'unlocked') {
-      if (this.state === 'playing' && !this.isTouch) this.togglePause(true);
+      if (this.state === 'playing' && !this.isTouch) {
+        this._autoPausedAt = performance.now();
+        this.togglePause(true);
+      }
+    } else if (a === 'lock-refused') {
+      // The browser said no to the mouse grab. Say so, instead of leaving the
+      // player waggling a trackpad that only moves the cursor.
+      this._lockHint = true;
+      this.hud.showHint('Click the game to look around', 60000);
+    } else if (a === 'locked') {
+      if (this._lockHint) { this._lockHint = false; this.hud.showHint(''); }
     }
   }
 
