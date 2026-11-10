@@ -103,6 +103,9 @@
               width:96px; height:96px; font-size:16px; }
   .btn-sprint { right:calc(132px + var(--safe-r)); bottom:calc(46px + var(--safe-b));
                 width:68px; height:68px; font-size:14px; }
+  .btn-sneak { right:calc(132px + var(--safe-r)); bottom:calc(128px + var(--safe-b));
+               width:68px; height:68px; font-size:14px; }
+  .btn-sneak.on { background:rgba(255,200,80,.34); border-color:rgba(255,220,140,.75); }
   .btn-sprint.on { background:rgba(90,190,255,.34); border-color:rgba(140,215,255,.75); }
   .btn-small { width:48px; height:48px; font-size:20px; }
   .btn-respawn { right:calc(28px + var(--safe-r)); top:calc(74px + var(--safe-t)); }
@@ -126,10 +129,16 @@ setTimeout(function () {
   d.style.cssText = 'position:fixed;inset:0;z-index:999;display:grid;place-items:center;'
     + 'background:#111417;color:#eef2f5;padding:30px;text-align:center;'
     + 'font-family:ui-rounded,"Segoe UI",system-ui,sans-serif;line-height:1.5';
+  // Browsers refuse to load module scripts from file:// - that, not an old
+  // browser, is why double-clicking index.html fails.
+  var why = location.protocol === 'file:'
+    ? 'Browsers will not run this game straight from the file. '
+      + 'Double-click <b>Play Game.command</b> in the game folder instead '
+      + '(or run <code>python3 serve.py</code> and open http://localhost:8100).'
+    : 'This browser is probably too old. Try the latest Chrome, Edge, Firefox or Safari.';
   d.innerHTML = '<div><div style="font-size:21px;font-weight:700;margin-bottom:10px">'
     + 'The game could not start</div>'
-    + '<div style="opacity:.75;font-size:14px;max-width:420px">This browser is probably too old. '
-    + 'Try the latest Chrome, Edge, Firefox or Safari.</div>'
+    + '<div style="opacity:.75;font-size:14px;max-width:420px">' + why + '</div>'
     + '<div style="opacity:.45;font-size:12px;margin-top:14px;font-family:ui-monospace,Menlo,monospace">'
     + (window.__parkourLoadError || 'scripts did not finish loading') + '</div></div>';
   document.body.appendChild(d);

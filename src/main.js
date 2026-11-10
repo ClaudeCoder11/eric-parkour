@@ -266,7 +266,7 @@ export class Game {
         forward: k.forward, back: k.back, left: k.left, right: k.right,
         jump: t.jump || k.jump,
         sprint: t.sprint || k.sprint,
-        sneak: k.sneak,
+        sneak: t.sneak || k.sneak,
       };
     }
     return this.keys.read();

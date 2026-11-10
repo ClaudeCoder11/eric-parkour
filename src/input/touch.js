@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // Touch controls: a left-thumb joystick, drag-anywhere-on-the-right to look,
-// and buttons for jump / sprint / respawn / camera.
+// and buttons for jump / sprint / sneak (shift) / respawn / camera.
 //
 // Multi-touch is tracked by pointerId so looking and moving work at the same
 // time, which is the thing most browser games get wrong on a phone.
@@ -15,6 +15,7 @@ export class TouchControls {
     this.moveX = 0; this.moveY = 0;
     this.jumpHeld = false;
     this.sprint = true;              // sprint is ON by default on phones
+    this.sneak = false;              // SHIFT is a toggle: holding it needs a third thumb
     this.dYaw = 0; this.dPitch = 0;
 
     this.stickId = null; this.stickOrigin = { x: 0, y: 0 };
@@ -32,6 +33,7 @@ export class TouchControls {
       <div class="stick"><div class="stick-base"></div><div class="stick-knob"></div></div>
       <div class="btn btn-jump" data-act="jump">JUMP</div>
       <div class="btn btn-sprint" data-act="sprint">RUN</div>
+      <div class="btn btn-sneak" data-act="sneak">SHIFT</div>
       <div class="btn btn-small btn-respawn" data-act="respawn">&#8635;</div>
       <div class="btn btn-small btn-cam" data-act="camera">&#128247;</div>`;
     this.root.appendChild(el);
@@ -40,6 +42,7 @@ export class TouchControls {
     this.knob = el.querySelector('.stick-knob');
     this.sprintBtn = el.querySelector('.btn-sprint');
     this.sprintBtn.classList.add('on');
+    this.sneakBtn = el.querySelector('.btn-sneak');
 
     const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
 
@@ -51,6 +54,9 @@ export class TouchControls {
         else if (act === 'sprint') {
           this.sprint = !this.sprint;
           this.sprintBtn.classList.toggle('on', this.sprint);
+        } else if (act === 'sneak') {
+          this.sneak = !this.sneak;
+          this.sneakBtn.classList.toggle('on', this.sneak);
         } else this.onAction(act);
       });
       const release = (e) => {
@@ -122,7 +128,7 @@ export class TouchControls {
       moveX: this.moveX, moveY: this.moveY,
       jump: this.jumpHeld,
       sprint: this.sprint,
-      sneak: false,
+      sneak: this.sneak,
     };
   }
 

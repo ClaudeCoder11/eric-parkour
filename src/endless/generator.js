@@ -52,6 +52,7 @@ export function parseSeed(text) {
 }
 
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+const MAIN_DIR = 3;              // the course heads this way overall (-z)
 
 export class EndlessCourse {
   constructor(scene, { seed, unlocked = 5 } = {}) {
@@ -66,7 +67,7 @@ export class EndlessCourse {
     this.jumps = [];       // every gap generated, for the reachability test
 
     // cursor
-    this.x = 0; this.y = 0; this.z = 0; this.dir = 3;
+    this.x = 0; this.y = 0; this.z = 0; this.dir = MAIN_DIR;
     this.spawn = { x: 0.5, y: 1, z: 0.5 };
     this.biomeId = 'plains';
 
@@ -104,6 +105,7 @@ export class EndlessCourse {
   buildSegment() {
     const before = new Set(this.world.blocks.keys());
     const startPlatform = this.platformCount;
+    const pads = [];                    // where each platform sits, to find the player
 
     for (let i = 0; i < PLATFORMS_PER_SEGMENT; i++) {
       const n = this.platformCount;
@@ -114,7 +116,11 @@ export class EndlessCourse {
 
       if (n > 0) {
         if (this.rand() < d.turnChance) {
-          this.dir = (this.dir + (this.rand() < 0.5 ? 1 : 3)) % 4;
+          // Turn off the main heading to one side, or back onto it - never
+          // round to face the way you came. That keeps the course always moving
+          // forward overall, so on a long run it can never cross over itself.
+          const side = this.rand() < 0.5 ? 1 : 3;
+          this.dir = this.dir === MAIN_DIR ? (MAIN_DIR + side) % 4 : MAIN_DIR;
           // After a turn the platform extends sideways, not forwards, so the
           // distance still to clear is half its WIDTH, not its depth.
           this.lastDepth = Math.floor(((this.lastWidth || 1) - 1) / 2) + 1;
@@ -140,6 +146,7 @@ export class EndlessCourse {
       const w = isCheckpoint ? 3 : d.width;
       const dep = isCheckpoint ? 3 : d.depth;
       this._pad(w, dep, block);
+      pads.push({ x: this.x, y: this.y, z: this.z });
       this.lastDepth = dep;
       this.lastWidth = w;
 
@@ -158,7 +165,7 @@ export class EndlessCourse {
     }
     const mesh = buildWorldMesh(segWorld);
     this.scene.add(mesh);
-    this.segments.push({ mesh, keys, startPlatform, endPlatform: this.platformCount });
+    this.segments.push({ mesh, keys, pads, startPlatform, endPlatform: this.platformCount });
     return this.segments[this.segments.length - 1];
   }
 
@@ -175,20 +182,41 @@ export class EndlessCourse {
       this.world.set(this.x, this.y - k, this.z, legBlock);
   }
 
-  /** Keep roughly `ahead` segments built in front of the player. */
-  update(playerPos, ahead = 3, behind = 2) {
-    while (this.segments.length < ahead) this.buildSegment();
+  /** Which segment is the player on? The one holding the nearest platform. */
+  currentSegment(playerPos) {
+    let best = 0, bestD = Infinity;
+    this.segments.forEach((seg, i) => {
+      for (const p of seg.pads) {
+        const d = (playerPos.x - p.x) ** 2 + (playerPos.z - p.z) ** 2
+                + ((playerPos.y ?? p.y) - p.y) ** 2;
+        if (d <= bestD) { bestD = d; best = i; }     // ties go to the newer one
+      }
+    });
+    return best;
+  }
 
-    // How far along is the player? Use the nearest generated platform.
-    const dist = Math.hypot(playerPos.x - this.x, playerPos.z - this.z);
-    if (dist < 80 && this.segments.length < ahead + 4) this.buildSegment();
+  /**
+   * Keep `ahead` segments built in front of the player and `behind` behind.
+   * Counting from where the player IS (not the total) is what makes it endless:
+   * only ~6 segments ever exist at once, so memory and lag stay flat forever.
+   */
+  update(playerPos, ahead = 3, behind = 2) {
+    while (this.segments.length < ahead + 1) this.buildSegment();   // first call
+    let cur = this.currentSegment(playerPos);
+
+    // At most one new segment per tick so a slow computer never hitches.
+    if (this.segments.length - 1 - cur < ahead) this.buildSegment();
 
     // Drop segments well behind the player.
-    while (this.segments.length > ahead + behind + 2) {
+    while (cur > behind) {
       const old = this.segments.shift();
       this.scene.remove(old.mesh);
       old.mesh.userData.dispose();
-      for (const k of old.keys) this.world.blocks.delete(k);
+      // On a long run the path can wander back over itself, so keep any
+      // block a newer segment also uses.
+      const keep = new Set(this.segments.flatMap((sg) => sg.keys));
+      for (const k of old.keys) if (!keep.has(k)) this.world.blocks.delete(k);
+      cur--;
     }
   }
 
