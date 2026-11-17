@@ -312,8 +312,10 @@ export class Game {
       const b = this.level.world.get(bx, by + dy, bz);
       if (!b) continue;
       if (b.id === 'checkpoint') {
+        // Any block of a checkpoint pad counts, not just its centre: endless
+        // checkpoints are 3x3 pads, and only one of the nine used to register.
         const idx = this.level.checkpoints.findIndex(
-          (c) => Math.abs(c.x - (b.x + 0.5)) < 0.6 && Math.abs(c.z - (b.z + 0.5)) < 0.6 &&
+          (c) => Math.abs(c.x - (b.x + 0.5)) < 1.6 && Math.abs(c.z - (b.z + 0.5)) < 1.6 &&
                  Math.abs(c.y - (b.y + 1)) < 1.2);
         if (idx > this.checkpointIndex) {
           this.checkpointIndex = idx;

@@ -163,7 +163,11 @@ export class EndlessCourse {
       this.lastWidth = w;
 
       if (this.jumps.length) this.jumps[this.jumps.length - 1].block = block;
-      if (isCheckpoint) this.checkpoints.push({ x: this.x + 0.5, y: this.y + 1, z: this.z + 0.5 });
+      // The pad grows forward from the cursor, so its middle is one block ahead.
+      if (isCheckpoint) {
+        const f = DIRS[this.dir];
+        this.checkpoints.push({ x: this.x + f[0] + 0.5, y: this.y + 1, z: this.z + f[1] + 0.5 });
+      }
       this.platformCount++;
     }
 
