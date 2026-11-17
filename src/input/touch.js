@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // Touch controls: a left-thumb joystick, drag-anywhere-on-the-right to look,
-// and buttons for jump / sprint / sneak (shift) / respawn / camera.
+// and buttons for jump / sprint / sneak (shift) / pause / respawn / camera.
 //
 // Multi-touch is tracked by pointerId so looking and moving work at the same
 // time, which is the thing most browser games get wrong on a phone.
@@ -34,6 +34,7 @@ export class TouchControls {
       <div class="btn btn-jump" data-act="jump">JUMP</div>
       <div class="btn btn-sprint" data-act="sprint">RUN</div>
       <div class="btn btn-sneak" data-act="sneak">SHIFT</div>
+      <div class="btn btn-small btn-pause" data-act="pause">&#10073;&#10073;</div>
       <div class="btn btn-small btn-respawn" data-act="respawn">&#8635;</div>
       <div class="btn btn-small btn-cam" data-act="camera">&#128247;</div>`;
     this.root.appendChild(el);

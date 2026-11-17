@@ -53,7 +53,19 @@
            background:rgba(8,10,12,.78); backdrop-filter:blur(10px); pointer-events:auto; }
   .panel.show { display:grid; }
   .card { background:#191d22; border:1px solid #2b3138; border-radius:14px; padding:28px 32px;
-          min-width:min(380px, 88vw); text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.5); }
+          min-width:min(380px, 88vw); text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.5);
+          /* A phone held sideways in Safari can be under 330px tall: scroll, don't cut off. */
+          max-height:calc(100dvh - 16px); overflow-y:auto; box-sizing:border-box;
+          touch-action:pan-y; overscroll-behavior:contain; }
+  @media (max-height: 420px) {
+    .card { padding:16px 24px; }
+    /* Short screen: Resume / Restart / Main menu go right under the title so
+       they are always on screen; the settings scroll below them. */
+    #pause .card { display:grid; grid-template-columns:repeat(3, auto); justify-content:center;
+                   column-gap:8px; align-content:start; }
+    #pause .card h2, #pause .settings { grid-column:1 / -1; }
+    #pause .settings { order:1; }
+  }
   .card h2 { margin:0 0 6px; font-size:24px; }
   .card p { margin:4px 0; opacity:.75; font-size:14px; }
   .big { font-size:40px; font-weight:700; font-variant-numeric:tabular-nums; margin:10px 0 2px; }
@@ -108,8 +120,10 @@
   .btn-sneak.on { background:rgba(255,200,80,.34); border-color:rgba(255,220,140,.75); }
   .btn-sprint.on { background:rgba(90,190,255,.34); border-color:rgba(140,215,255,.75); }
   .btn-small { width:48px; height:48px; font-size:20px; }
-  .btn-respawn { right:calc(28px + var(--safe-r)); top:calc(74px + var(--safe-t)); }
-  .btn-cam { right:calc(28px + var(--safe-r)); top:calc(132px + var(--safe-t)); }
+  /* Phones have no Esc key, so this is the only way to settings / main menu. */
+  .btn-pause { right:calc(28px + var(--safe-r)); top:calc(74px + var(--safe-t)); font-size:17px; letter-spacing:-3px; }
+  .btn-respawn { right:calc(28px + var(--safe-r)); top:calc(132px + var(--safe-t)); }
+  .btn-cam { right:calc(28px + var(--safe-r)); top:calc(190px + var(--safe-t)); }
   .rotate-note { position:absolute; inset:0; display:none; place-items:center; text-align:center;
                  background:#111417; font-size:17px; padding:30px; z-index:20; }
   @media (orientation: portrait) and (pointer: coarse) { .rotate-note { display:grid; } }
