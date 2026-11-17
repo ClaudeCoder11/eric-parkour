@@ -73,9 +73,21 @@ export class EndlessCourse {
 
     this.lastDepth = 1;
     this.lastWidth = 7;
-    this.world.fill(-3, 0, -3, 3, 0, 3, 'grass');       // starting island
-    this.world.fill(-3, -1, -3, 3, -1, 3, 'stone');
-    this.z = -3;
+    // Starting island. It is a segment like any other, so it gets drawn (it
+    // used to be solid but invisible - you spawned floating on nothing) and
+    // is thrown away once you are well past it.
+    const island = new World();
+    island.fill(-3, 0, -3, 3, 0, 3, 'grass');
+    island.fill(-3, -1, -3, 3, -1, 3, 'dirt');
+    island.fill(-2, -2, -2, 2, -2, 2, 'stone');
+    island.fill(-1, -3, -1, 1, -3, 1, 'stone');
+    for (const b of island.blocks.values()) this.world.set(b.x, b.y, b.z, b.id);
+    const islandMesh = buildWorldMesh(island);
+    this.scene.add(islandMesh);
+    this.segments.push({ mesh: islandMesh, keys: [...island.blocks.keys()],
+                         pads: [{ x: 0, y: 0, z: 0 }], startPlatform: 0, endPlatform: 0 });
+
+    this.z = -3;              // cursor on the island's front row
     this.checkpoints.push({ ...this.spawn });
   }
 
@@ -114,7 +126,7 @@ export class EndlessCourse {
       const pal = PALETTE[biome];
       const d = this.difficulty(n);
 
-      if (n > 0) {
+      {                       // every platform, the first too, is a jump away
         if (this.rand() < d.turnChance) {
           // Turn off the main heading to one side, or back onto it - never
           // round to face the way you came. That keeps the course always moving

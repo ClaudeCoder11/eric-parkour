@@ -14,12 +14,14 @@ export default {
   unlocks: ['Sprinting, slabs, stairs, ladders and cobwebs'],
 
   build(c, w, level) {
-    c.at(0, 5, 0).facing(3).mat('grass');       // facing -Z
-
-    // --- Warm-up: a wide starting island -----------------------------------
+    // --- Warm-up: a wide starting island, centred on the spawn --------------
+    // The pad grows FORWARD from the cursor, so start it 3 blocks behind the
+    // spawn. Starting at the spawn put the grass 3 blocks ahead of the dirt
+    // and stone under it - bare dirt behind you, and no gap before jump one.
+    c.at(0, 5, 3).facing(3).mat('grass');       // facing -Z
     c.pad(7, 7);
     for (let i = 1; i <= 3; i++) w.fill(-3, 5 - i, -3, 3, 5 - i, 3, i === 1 ? 'dirt' : 'stone');
-    c.step(3);
+    c.step(6);                                  // cursor on the island's front row
 
     // --- Easy 2-block walk jumps -------------------------------------------
     c.mat('grass');
